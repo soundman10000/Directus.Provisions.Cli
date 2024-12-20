@@ -1,41 +1,41 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using CommandLine;
 using Microsoft.Extensions.Hosting;
-using CommandLine;
-using Directus.Provisions.Cli;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using static Directus.Provisions.Cli.ServiceProviderRegistrar;
+using static Directus.Provisions.Cli.LoggingRegistrar;
+
+namespace Directus.Provisions.Cli;
 
 public class Program
 {
     public static async Task Main(string[] args)
     {
         using var host = Host.CreateDefaultBuilder(args)
+            .ConfigureLogging(SetupLogging)
             .ConfigureServices(SetupServiceProvider)
             .Build();
 
-        var serviceProvider = host.Services;
+        var state = host.Services.GetRequiredService<IState>();
 
         if (args.Length == 0)
         {
-            Console.WriteLine("No arguments provided. Usage: dotnet run [command]");
+            state.Logger.LogError("No arguments provided. Usage: dotnet run [command]");
             return;
         }
 
-        await Parser.Default
-            .ParseArguments<ExportCommand, ImportCommandOptions>(args)
-            .MapResult(
-                (ExportCommand opts) => ExportCommandHandler.ExecuteAsync(opts),
-                (ImportCommandOptions opts) => ImportCommandHandler.ExecuteAsync(opts),
-                errors =>
-                {
-                    foreach (var error in errors)
-                    {
-                        Console.WriteLine(error.ToString());
-                    }
-                    return Task.CompletedTask;
-                });
-    }
-
-    private static void SetupServiceProvider(IServiceCollection sc)
-    {
-        // This can be used to add services if needed for your commands
+        try
+        {
+            await Parser.Default
+                .ParseArguments<ExportCommand, ImportCommandOptions>(args)
+                .MapResult(
+                    (ExportCommand opts) => state.HandlerFactory.ExecuteCommand(opts),
+                    (ImportCommandOptions opts) => state.HandlerFactory.ExecuteCommand(opts),
+                    state.ErrorManager.LogParseErrors);
+        }
+        catch (Exception e)
+        {
+            await state.ErrorManager.LogUncaughtExceptions(e);
+        }
     }
 }

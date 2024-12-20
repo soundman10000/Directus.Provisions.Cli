@@ -1,10 +1,20 @@
-﻿namespace Directus.Provisions.Cli;
+﻿using Microsoft.Extensions.Logging;
 
-internal class ExportCommandHandler
+namespace Directus.Provisions.Cli;
+
+internal class ExportCommandHandler : ICommandHandler<ExportCommand>
 {
-    public static Task ExecuteAsync(ExportCommand opts)
+    private readonly ILogger<ExportCommandHandler> _logger;
+
+    public ExportCommandHandler(ILogger<ExportCommandHandler> logger)
     {
-        Console.WriteLine($"Sum: {opts.A + opts.B}");
+        this._logger = logger;
+    }
+
+    public Task HandleAsync(ExportCommand opts)
+    {
+        this._logger.LogInformation($"Sum: {opts.A + opts.B}");
+
         return Task.CompletedTask;
     }
 }

@@ -1,11 +1,19 @@
-﻿namespace Directus.Provisions.Cli;
+﻿using Microsoft.Extensions.Logging;
 
-internal class ImportCommandHandler
+namespace Directus.Provisions.Cli;
+
+internal class ImportCommandHandler : ICommandHandler<ImportCommandOptions>
 {
-    public static Task ExecuteAsync(ImportCommandOptions opts)
+    private readonly ILogger<ImportCommandHandler> _logger;
+
+    public ImportCommandHandler(ILogger<ImportCommandHandler> logger)
     {
-        Console.WriteLine($"Hello, {opts.Name ?? "World"}!");
-        
+        this._logger = logger;
+    }
+
+    public Task HandleAsync(ImportCommandOptions opts)
+    {
+        this._logger.LogInformation($"Hello, {opts.Name ?? "World"}!");
         return Task.CompletedTask;
     }
 }

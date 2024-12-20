@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Directus.Provisions.Cli": {
+      "commandName": "Project",
+      "commandLineArgs": "add 1 2"
+    }
+  }
+}
